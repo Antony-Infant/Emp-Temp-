@@ -1,9 +1,6 @@
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Repository {
     List<Employee> employees = new ArrayList<>();
@@ -18,8 +15,7 @@ public class Repository {
             scanner.nextLine();
             name = scanner.nextLine();
             System.out.println("dept:");
-            scanner.nextLine();
-            dept = scanner.nextLine();
+            dept = scanner.nextLine().toUpperCase();
             System.out.println("Salary:");
             salary = scanner.nextInt();
             System.out.println("Experience:");
@@ -28,7 +24,7 @@ public class Repository {
             System.out.println("Please Type a Valid Datatype");
         }
         catch (Exception e){
-            System.out.println(e);
+            System.out.println(e + "");
         }
 
         Employee employee = new Employee(id, name,dept, salary, exp);
@@ -44,20 +40,21 @@ public class Repository {
         }
     }
 
-    public Employee getEmployeeById(int id){
+    public Optional<Employee> getEmployeeById(int id){
         for (Employee employee: employees){
             if (employee.getId() == id){
-                return employee;
+                return Optional.of(employee);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     public int deleteEmployee(int id){
-        Employee employee = getEmployeeById(id);
-        if (employee != null){
-            employees.remove(employee);
-            return 1;
+        for (Employee employee: employees){
+            if (employee.getId() == id){
+                employees.remove(employee);
+                return 1;
+            }
         }
          return -1;
     }
@@ -70,13 +67,14 @@ public class Repository {
         return -1;
     }
 
-    public  void updateEmployee(int id, Scanner scanner){
-        if (getEmployeeById(id) == null){
+    public void updateEmployee(int id, Scanner scanner){
+        if (getEmployeeById(id).isEmpty()){
             System.out.println("No Employee Found");
         }
         else{
+            Employee employee = getEmployeeById(id).orElse(new Employee(1,null,null,1,1));
             int option=0;
-            while (option!=4){
+            while (option!=5){
                 try {
                     System.out.println(" ");
                     System.out.println("Enter Option to update");
@@ -87,23 +85,23 @@ public class Repository {
                             System.out.print("Enter name to update: ");
                             scanner.nextLine();
                             String name = scanner.nextLine();
-                            getEmployeeById(id).setName(name);
+                            employee.setName(name);
                             continue;
                         case 2:
                             System.out.print("Enter dept to update: ");
                             scanner.nextLine();
-                            String dept = scanner.nextLine();
-                            getEmployeeById(id).setDepartment(dept);
+                            String dept = scanner.nextLine().toUpperCase();
+                            employee.setDepartment(dept);
                             continue;
                         case 3:
                             System.out.print("Enter salary to update: ");
                             int salary = scanner.nextInt();
-                            getEmployeeById(id).setSalary(salary);
+                            employee.setSalary(salary);
                             continue;
                         case 4:
                             System.out.print("Enter exp to update: ");
                             int exp = scanner.nextInt();
-                            getEmployeeById(id).setExperience(exp);
+                            employee.setExperience(exp);
                             continue;
                         case 5:
                             break;
@@ -111,7 +109,7 @@ public class Repository {
                             throw new InvalidOption("Option Invalid");
                     }
                 } catch (InvalidOption e) {
-                    System.out.println(e);
+                    System.out.println(e + "");
                 }
                 catch (InputMismatchException e){
                     System.out.println("Please Type a Valid Datatype");
@@ -127,39 +125,48 @@ public class Repository {
         Comparator<Employee> comparator;
         int option=0;
         while (option != 4) {
-            System.out.println("1.sort by salary \n" +
-                    "2.sort by experience \n" +
-                    "3.sort by name\n" +
-                    "4.Exit \n");
+            System.out.println("""
+                    1.sort by salary
+                    2.sort by experience
+                    3.sort by name
+                    4.Exit
+                    """);
             option = scanner.nextInt();
             switch (option) {
                 case 1:
                     comparator = (o1, o2) -> {
                         if (o1.getSalary() > o2.getSalary())
                             return 1;
-                        return -1;
-
+                        else if (o1.getSalary() < o2.getSalary()) {
+                            return -1;
+                        }
+                        else
+                            return 0;
                     };
-                    Collections.sort(employees, comparator);
-                    employees.forEach(n -> System.out.println(n));
+                    employees.sort(comparator);
+                    employees.forEach(System.out::println);
                     continue;
                 case 2:
                     comparator = (o1, o2) -> {
                         if (o1.getExperience() > o2.getExperience())
                             return 1;
-                        return -1;
-
+                        else if (o1.getExperience() < o2.getExperience()) {
+                            return -1;
+                        }
+                        else
+                            return 0;
                     };
-                    Collections.sort(employees, comparator);
-                    employees.forEach(n -> System.out.println(n));
+                    employees.sort(comparator);
+                    employees.forEach(System.out::println);
                     continue;
                 case 3:
                     comparator = Comparator.comparing(o -> o.getName().toLowerCase());
                     employees.sort(comparator);
-                    employees.forEach(n -> System.out.println(n));
+                    employees.forEach(System.out::println);
                     continue;
                 case 4:
-                    System.out.println("Exit");
+                    comparator = Comparator.comparing(Employee::getId);
+                    employees.sort(comparator);
                     break;
                 default:
                     System.out.println("Enter a Valid Option");
@@ -169,34 +176,61 @@ public class Repository {
     }
 
     public void filterEmpBySalary(int salary){
-        employees.stream().filter(e->e.getSalary()>salary).forEach(n-> System.out.println(n));
+        employees.stream().filter(e->e.getSalary()>salary).forEach(System.out::println);
     }
 
     public List<Employee> filterEmpByExperience(int exp){
-        Predicate<Employee> expfil = new Predicate<Employee>() {
-            public boolean test(Employee n) {
-                return n.getExperience()>=exp;
-            }
-        };
-        return employees.stream().filter(expfil).collect(Collectors.toList());
+        return employees.stream().filter(e->e.getExperience()>=exp).collect(Collectors.toList());
     }
 
     public List<String> getEmployeeNames(){
-        employees.forEach(n-> System.out.println(n.getName()));
-        return employees.stream().map(e->e.getName()).collect(Collectors.toList());
+        return employees.stream().map(Employee::getName).collect(Collectors.toList());
     }
 
-    public void transformEmployeeNames(){
-        Function<Employee ,String> f =new Function<Employee, String>() {
+    public void transformEmployeeNames1() {
+        Function<Employee, Employee> emps = new Function<Employee, Employee>() {
             @Override
-            public String apply(Employee employee) {
-                return employee.getName().toUpperCase();
+            public Employee apply(Employee employee) {
+                employee.setName(employee.getName().toUpperCase());
+                return employee;
             }
         };
-        employees.stream().map(e->e.getName().toUpperCase());
+        employees = employees.stream().map(emps).collect(Collectors.toList());
     }
 
-    public long getEmployeeByDept(String dept){
-        return employees.stream().filter(e-> Objects.equals(e.getDepartment(), dept)).count();
+    public void transformEmployeeNames2() {
+        Function<Employee, Employee> emps = new Function<Employee, Employee>() {
+            @Override
+            public Employee apply(Employee employee) {
+                employee.setName(employee.getName().toLowerCase());
+                return employee;
+            }
+        };
+        employees = employees.stream().map(emps).collect(Collectors.toList());
+    }
+
+
+
+    public long getEmployeeCountByDept(String dept){
+        return employees.stream().filter(e-> e.getDepartment().equals(dept)).count();
+    }
+
+    public int getHighestSalary(){
+        return employees.stream().map(Employee::getSalary).reduce(0,(a, b) -> Math.max(a,b));
+    }
+
+    public void groupByDept(){
+        Map<String,List<Employee>> map = employees.stream().collect(Collectors.groupingBy(Employee::getDepartment));
+        for(String s : map.keySet()){
+            System.out.println(s + map.get(s));
+        }
+    }
+
+    public void divideByExperience(int exp){
+        Map<Boolean,List<Employee>> map = employees.stream().collect(Collectors.partitioningBy(e->e.getExperience()>exp));
+
+        System.out.println("senior:"+ map.get(true));
+        System.out.println("junior:"+ map.get(false));
+
     }
 }

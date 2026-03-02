@@ -1,6 +1,4 @@
-import java.util.Comparator;
-import java.util.InputMismatchException;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -8,22 +6,22 @@ public class Main {
         Repository repository = new Repository();
         int id = 0, option=0;
 
-
         while (option != 9) {
             try {
                 System.out.println(" ");
                 System.out.println("Enter Option");
-                System.out.println("1.Create a New Employee \n" +
-                        "2.Get Employee \n" +
-                        "3.Update Employee \n" +
-                        "4.Delete a Employee \n" +
-                        "5.Delete All \n" +
-                        "6.Display All \n" +
-                        "7.sort \n" +
-                        "8.others \n" +
-                        "9.Exit");
+                System.out.println("""
+                        1.Create a New Employee
+                        2.Get Employee
+                        3.Update Employee
+                        4.Delete a Employee
+                        5.Delete All
+                        6.Display All
+                        7.sort
+                        8.others
+                        9.Exit""");
                 option = scanner.nextInt();
-                int temp=0;
+                int temp,res;
                 switch (option) {
                     case 1:
                         repository.addEmployee(++id,scanner);
@@ -32,11 +30,14 @@ public class Main {
                     case 2:
                         System.out.print("Enter Id of Employee: ");
                         temp = scanner.nextInt();
-                        Employee e = repository.getEmployeeById(temp);
-                        if (e != null)
-                            System.out.println(e.getId()+" "+e.getName()+" "+e.getSalary()+" "+e.getExperience());
+                        Optional<Employee> e = repository.getEmployeeById(temp);
+                        Employee employee;
+                        if (e.isPresent()) {
+                            employee = e.orElse(new Employee(1, null, null, 1, 1));
+                            System.out.println(employee);
+                        }
                         else
-                            System.out.println("Employee Not Found");
+                            System.out.println("Employee not found");
                         continue;
                     case 3:
                         System.out.print("Enter Id od Employee to Update: ");
@@ -46,7 +47,7 @@ public class Main {
                     case 4:
                         System.out.print("Enter Id od Employee to delete: ");
                         temp = scanner.nextInt();
-                        int res = repository.deleteEmployee(temp);
+                        res = repository.deleteEmployee(temp);
                         if (res==1)
                             System.out.println("Employee Deleted Successfully");
                         else
@@ -64,19 +65,68 @@ public class Main {
                         continue;
                     case 7:
                         repository.sort(scanner);
+                        continue;
                     case 8:
-                        System.out.println("Enter salary:");
-                        int salary = scanner.nextInt();
-                        repository.filterEmpBySalary(salary);
-                        System.out.println("Enter exp:");
-                        int exp = scanner.nextInt();
-                        repository.filterEmpByExperience(exp);
-                        System.out.println("Enter Dept:");
-                        scanner.nextLine();
-                        String dept = scanner.nextLine();
-                        repository.getEmployeeByDept(dept);
-                        repository.getEmployeeNames();
-                        repository.transformEmployeeNames();
+                        int otherOption = 0;
+                        while (otherOption!=10){
+                            System.out.println("""
+                                    Enter option:\s
+                                    1.filterEmpBySalary
+                                    2.filterEmpByExperience
+                                    3.getEmployeeCountByDept
+                                    4.Get Employee Names
+                                    5.Transform Employee Names to Upper Case
+                                    6.Transform Employee Names to Lower Case
+                                    7.Get Highest Salary
+                                    8.Group Employees by Department
+                                    9.Partition employees by experience
+                                    10.exit""");
+                            otherOption = scanner.nextInt();
+                            switch (otherOption) {
+                                case 1:
+                                    System.out.println("Enter salary:");
+                                    int salary = scanner.nextInt();
+                                    repository.filterEmpBySalary(salary);
+                                    continue;
+                                case 2:
+                                    System.out.println("Enter exp:");
+                                    int exp = scanner.nextInt();
+                                    List<Employee> l = repository.filterEmpByExperience(exp);
+                                    l.forEach(System.out::println);
+                                    continue;
+                                case 3:
+                                    System.out.println("Enter Dept:");
+                                    scanner.nextLine();
+                                    String dept = scanner.nextLine().toUpperCase();
+                                    System.out.println(repository.getEmployeeCountByDept(dept));
+                                    continue;
+                                case 4:
+                                    List<String> s= repository.getEmployeeNames();
+                                    s.forEach(System.out::println);
+                                    continue;
+                                case 5:
+                                    repository.transformEmployeeNames1();
+                                    continue;
+                                case 6:
+                                    repository.transformEmployeeNames2();
+                                    continue;
+                                case 7:
+                                    System.out.println(repository.getHighestSalary());
+                                    continue;
+                                case 8:
+                                    repository.groupByDept();
+                                    continue;
+                                case 9:
+                                    System.out.println("Enter Experience");
+                                    temp = scanner.nextInt();
+                                    repository.divideByExperience(temp);
+                                    continue;
+                                case 10:
+                                    break;
+                                default:
+                                    throw new InvalidOption("Option Invalid");
+                            }
+                        }
                         continue;
                     case 9:
                         break;
@@ -84,7 +134,7 @@ public class Main {
                         throw new InvalidOption("Option Invalid");
                 }
             } catch (InvalidOption e) {
-                System.out.println(e);
+                System.out.println(e+ "");
             }
             catch (InputMismatchException e){
                 System.out.println("Please Type a Valid Datatype");
@@ -94,7 +144,6 @@ public class Main {
             }
         }
     }
-
 }
 
 class InvalidOption extends Exception{
