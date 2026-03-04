@@ -21,10 +21,10 @@ public class Main {
                         8.others
                         9.Exit""");
                 option = scanner.nextInt();
-                int temp,res;
+                int temp, res;
                 switch (option) {
                     case 1:
-                        repository.addEmployee(++id,scanner);
+                        repository.addEmployee(++id, scanner);
                         System.out.println("Added Successfully");
                         continue;
                     case 2:
@@ -35,27 +35,30 @@ public class Main {
                         if (e.isPresent()) {
                             employee = e.orElse(new Employee(1, null, null, 1, 1));
                             System.out.println(employee);
-                        }
-                        else
+                        } else
                             System.out.println("Employee not found");
                         continue;
                     case 3:
-                        System.out.print("Enter Id od Employee to Update: ");
-                        temp = scanner.nextInt();
-                        repository.updateEmployee(temp,scanner);
+                        if (!repository.employees.isEmpty()){
+                            System.out.print("Enter Id od Employee to Update: ");
+                            temp = scanner.nextInt();
+                            repository.updateEmployee(temp, scanner);
+                        }
+                         else
+                            System.out.println("Employees Empty");
                         continue;
                     case 4:
                         System.out.print("Enter Id od Employee to delete: ");
                         temp = scanner.nextInt();
                         res = repository.deleteEmployee(temp);
-                        if (res==1)
+                        if (res == 1)
                             System.out.println("Employee Deleted Successfully");
                         else
                             System.out.println("No Employee Found");
                         continue;
                     case 5:
                         res = repository.deleteEmployees();
-                        if (res==1)
+                        if (res == 1)
                             System.out.println("All Employees Deleted Successfully");
                         else
                             System.out.println("No Employees in Repository");
@@ -68,7 +71,7 @@ public class Main {
                         continue;
                     case 8:
                         int otherOption = 0;
-                        while (otherOption!=10){
+                        while (otherOption != 11) {
                             System.out.println("""
                                     Enter option:\s
                                     1.filterEmpBySalary
@@ -80,29 +83,43 @@ public class Main {
                                     7.Get Highest Salary
                                     8.Group Employees by Department
                                     9.Partition employees by experience
-                                    10.exit""");
+                                    10.Department salary report
+                                    11.exit""");
                             otherOption = scanner.nextInt();
                             switch (otherOption) {
                                 case 1:
-                                    System.out.println("Enter salary:");
-                                    int salary = scanner.nextInt();
-                                    repository.filterEmpBySalary(salary);
+                                    if (!repository.employees.isEmpty()){
+                                        System.out.println("Enter salary:");
+                                        int salary = scanner.nextInt();
+                                        repository.filterEmpBySalary(salary);
+                                    }
+                                    else
+                                        System.out.println("no Employees Found");
                                     continue;
                                 case 2:
-                                    System.out.println("Enter exp:");
-                                    int exp = scanner.nextInt();
-                                    List<Employee> l = repository.filterEmpByExperience(exp);
-                                    l.forEach(System.out::println);
+                                    if (!repository.employees.isEmpty()) {
+                                        System.out.println("Enter exp:");
+                                        int exp = scanner.nextInt();
+                                        repository.filterEmpByExperience(exp).forEach(System.out::println);
+                                    }
+                                    else
+                                        System.out.println("Employees Empty");
                                     continue;
                                 case 3:
-                                    System.out.println("Enter Dept:");
-                                    scanner.nextLine();
-                                    String dept = scanner.nextLine().toUpperCase();
-                                    System.out.println(repository.getEmployeeCountByDept(dept));
+                                    if (!repository.employees.isEmpty()) {
+                                        System.out.println("Enter Dept:");
+                                        scanner.nextLine();
+                                        String dept = scanner.nextLine().toUpperCase();
+                                        System.out.println("Employee count in " + dept + ": " + repository.getEmployeeCountByDept(dept));
+                                    }
+                                    else
+                                        System.out.println("No Employees");
                                     continue;
                                 case 4:
-                                    List<String> s= repository.getEmployeeNames();
-                                    s.forEach(System.out::println);
+                                    if (repository.getEmployeeNames()!=null)
+                                        repository.getEmployeeNames().forEach(System.out::println);
+                                    else
+                                        System.out.println("Employees Empty");
                                     continue;
                                 case 5:
                                     repository.transformEmployeeNames1();
@@ -111,17 +128,32 @@ public class Main {
                                     repository.transformEmployeeNames2();
                                     continue;
                                 case 7:
-                                    System.out.println(repository.getHighestSalary());
+                                    if (repository.getHighestSalary().isPresent())
+                                        System.out.println(repository.getHighestSalary());
+                                    else
+                                        System.out.println("No Employees Found");
                                     continue;
                                 case 8:
-                                    repository.groupByDept();
+                                    if (repository.groupByDept()!=null) {
+                                        for (String dep : repository.groupByDept().keySet()) {
+                                            System.out.println(dep + repository.groupByDept().get(dep));
+                                        }
+                                    }
+                                    else
+                                        System.out.println("Employees not found");
                                     continue;
                                 case 9:
-                                    System.out.println("Enter Experience");
-                                    temp = scanner.nextInt();
-                                    repository.divideByExperience(temp);
+                                    if (!repository.employees.isEmpty()){
+                                        System.out.println("Enter Experience");
+                                        temp = scanner.nextInt();
+                                        repository.divideByExperience(temp);
+                                    }
+                                    else
+                                        System.out.println("Employees is Empty");
                                     continue;
                                 case 10:
+                                    repository.depSalarySummary();
+                                case 11:
                                     break;
                                 default:
                                     throw new InvalidOption("Option Invalid");
@@ -133,17 +165,20 @@ public class Main {
                     default:
                         throw new InvalidOption("Option Invalid");
                 }
-            } catch (InvalidOption e) {
-                System.out.println(e+ "");
-            }
-            catch (InputMismatchException e){
+
+            }catch (InputMismatchException e) {
                 System.out.println("Please Type a Valid Datatype");
+                scanner.nextLine();
             }
-            catch (Exception e){
+            catch (InvalidOption e) {
+                System.out.println(e + "");
+
+            } catch (Exception e) {
                 System.out.println(e + "Something went wrong");
             }
         }
     }
+
 }
 
 class InvalidOption extends Exception{
